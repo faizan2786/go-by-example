@@ -2,20 +2,9 @@ package url
 
 import (
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 )
-
-func TestParse(t *testing.T) {
-	rawUrl := "https://github.com/faizan2786"
-	got, err := Parse(rawUrl)
-	if err != nil {
-		t.Fatalf("Parse(%q) err = %q, want %v", rawUrl, err, nil)
-	}
-
-	want := &URL{Scheme: "https", Host: "github.com", Path: "faizan2786"}
-	if *got != *want {
-		t.Errorf("Parse(%q)\ngot %#v\nwant %#v", rawUrl, got, want)
-	}
-}
 
 func TestURLString(t *testing.T) {
 
@@ -25,5 +14,19 @@ func TestURLString(t *testing.T) {
 
 	if got != want {
 		t.Errorf("String() = %q, want %q", got, want)
+	}
+}
+
+func TestParse(t *testing.T) {
+	rawUrl := "https://myurl.com/myblog"
+	got, err := Parse(rawUrl)
+	if err != nil {
+		t.Fatalf("Parse(%q) err = %q, want %v", rawUrl, err, nil)
+	}
+
+	want := &URL{Scheme: "https", Host: "myurl.com", Path: "myblog"}
+	diff := cmp.Diff(want, got)
+	if diff != "" {
+		t.Errorf("Parse(%q) output mismatch (-want +got):\n%s", rawUrl, diff)
 	}
 }

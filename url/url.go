@@ -1,6 +1,10 @@
 package url
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+	"strings"
+)
 
 type URL struct {
 	Scheme string
@@ -13,5 +17,14 @@ func (u *URL) String() string {
 }
 
 func Parse(rawURL string) (*URL, error) {
-	return &URL{Scheme: "https", Host: "github.com", Path: "faizan2786"}, nil
+
+	scheme, leftOverStr, found := strings.Cut(rawURL, "://")
+	if !found {
+		return nil, errors.New("missing '://' in the provided url string")
+	}
+
+	host, path, _ := strings.Cut(leftOverStr, "/") // url may or may not have a sub-path
+
+	// construct the URL obj and return the pointer
+	return &URL{Scheme: scheme, Host: host, Path: path}, nil
 }
