@@ -20,6 +20,7 @@ var parseTestCases = []struct {
 		want:   &URL{Scheme: "https", Host: "myurl.com"},
 		err:    nil,
 	},
+
 	{
 		name:   "Full URL",
 		rawURL: "https://myurl.com/myblog",
@@ -28,8 +29,14 @@ var parseTestCases = []struct {
 	},
 	{
 		name:   "Invalid URL",
-		rawURL: "https:/myurl.com",
-		err:    errors.New("missing '://' in the provided url string"),
+		rawURL: "https//myurl.com",
+		err:    errors.New("missing ':' in the provided url string"),
+	},
+	{
+		name:   "Opaque URL",
+		rawURL: "data:text/json",
+		want:   &URL{Scheme: "data"},
+		err:    nil,
 	},
 }
 
@@ -47,22 +54,26 @@ func TestURLString(t *testing.T) {
 func TestParse(t *testing.T) {
 
 	for _, tt := range parseTestCases {
-		t.Logf("Running test case: %q\n", tt.name)
-		got, gotErr := Parse(tt.rawURL)
 
-		// if error is not expected
-		if tt.err == nil && gotErr != nil {
-			t.Fatalf("Parse(%q) err = %q, want %q", tt.rawURL, gotErr, tt.err)
-		}
+		// run each test case as a subtest
+		t.Run(tt.name, func(t *testing.T) {
+			t.Logf("Running test case: %q\n", tt.name)
+			got, gotErr := Parse(tt.rawURL)
 
-		// if error is expected but content of the error we got is different
-		if tt.err != nil && (gotErr == nil || tt.err.Error() != gotErr.Error()) {
-			t.Fatalf("Parse(%q) err = %q, want %q", tt.rawURL, gotErr, tt.err)
-		}
+			// if error is not expected
+			if tt.err == nil && gotErr != nil {
+				t.Fatalf("Parse(%q) err = %q, want %q", tt.rawURL, gotErr, tt.err)
+			}
 
-		diff := cmp.Diff(tt.want, got)
-		if diff != "" {
-			t.Errorf("Parse(%q) output mismatch (-want +got):\n%s", tt.rawURL, diff)
-		}
+			// if error is expected but content of the error we got is different
+			if tt.err != nil && (gotErr == nil || tt.err.Error() != gotErr.Error()) {
+				t.Fatalf("Parse(%q) err = %q, want %q", tt.rawURL, gotErr, tt.err)
+			}
+
+			diff := cmp.Diff(tt.want, got)
+			if diff != "" {
+				t.Errorf("Parse(%q) output mismatch (-want +got):\n%s", tt.rawURL, diff)
+			}
+		})
 	}
 }
