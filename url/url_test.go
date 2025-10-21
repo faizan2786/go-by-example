@@ -15,40 +15,80 @@ var parseTestCases = []struct {
 	err    error
 }{
 	{
-		name:   "URL without path",
+		name:   "no_path",
 		rawURL: "https://myurl.com",
 		want:   &URL{Scheme: "https", Host: "myurl.com"},
 		err:    nil,
 	},
 
 	{
-		name:   "Full URL",
+		name:   "full",
 		rawURL: "https://myurl.com/myblog",
 		want:   &URL{"https", "myurl.com", "myblog"},
 		err:    nil,
 	},
 	{
-		name:   "Invalid URL",
+		name:   "invalid",
 		rawURL: "https//myurl.com",
-		err:    errors.New("missing ':' in the provided url string"),
+		err:    errors.New("missing scheme"),
 	},
 	{
-		name:   "Opaque URL",
+		name:   "opaque",
 		rawURL: "data:text/json",
 		want:   &URL{Scheme: "data"},
 		err:    nil,
+	},
+	{
+		name:   "no_scheme",
+		rawURL: "://github.com",
+		err:    errors.New("missing scheme"),
 	},
 }
 
 func TestURLString(t *testing.T) {
 
-	url := URL{Scheme: "http", Host: "www.dummyurl.com", Path: "mypage"}
-	got := url.String()
-	want := "http://www.dummyurl.com/mypage"
-
-	if got != want {
-		t.Errorf("String() = %q, want %q", got, want)
+	testCases := []struct {
+		name string
+		url  *URL
+		want string
+	}{
+		{
+			name: "valid",
+			url:  &URL{"http", "www.dummyurl.com", "mypage"},
+			want: "http://www.dummyurl.com/mypage",
+		},
+		{
+			name: "empty",
+			url:  new(URL), // create an empty URL (i.e. same as &URL{})
+			want: "",
+		},
+		{
+			name: "nil",
+			url:  nil,
+			want: "",
+		},
+		{
+			name: "scheme_only",
+			url:  &URL{Scheme: "https"},
+			want: "https://",
+		},
+		{
+			name: "no_path",
+			url:  &URL{Scheme: "https", Host: "www.dummyurl.com"},
+			want: "https://www.dummyurl.com",
+		},
 	}
+
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+
+			got := tt.url.String()
+			if got != tt.want {
+				t.Errorf("String() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+
 }
 
 func TestParse(t *testing.T) {
@@ -62,12 +102,12 @@ func TestParse(t *testing.T) {
 
 			// if error is not expected
 			if tt.err == nil && gotErr != nil {
-				t.Fatalf("Parse(%q) err = %q, want %q", tt.rawURL, gotErr, tt.err)
+				t.Fatalf("Parse(%q) err = %v, want error: %v", tt.rawURL, gotErr, tt.err)
 			}
 
 			// if error is expected but content of the error we got is different
 			if tt.err != nil && (gotErr == nil || tt.err.Error() != gotErr.Error()) {
-				t.Fatalf("Parse(%q) err = %q, want %q", tt.rawURL, gotErr, tt.err)
+				t.Fatalf("Parse(%q) err = %v, want error: %v", tt.rawURL, gotErr, tt.err)
 			}
 
 			diff := cmp.Diff(tt.want, got)
