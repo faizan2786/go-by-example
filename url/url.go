@@ -35,7 +35,8 @@ func (u *URL) String() string {
 		sb.WriteString(u.Host)
 	}
 	if u.Path != "" {
-		sb.WriteString(pathSeparator + u.Path)
+		sb.WriteString(pathSeparator)
+		sb.WriteString(u.Path)
 	}
 	return sb.String()
 }
