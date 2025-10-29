@@ -17,18 +17,27 @@ func (u *URL) String() string {
 		return str
 	}
 
+	const schemaSeparator string = "://"
+	const pathSeparator string = "/"
+
+	// use a string builder and pre-allocate required bytes to avoid extra mem. allocations caused by string concats
+	sb := strings.Builder{}
+
+	urlLen := len(u.Scheme) + len(schemaSeparator) + len(u.Host) + len(pathSeparator) + len(u.Path)
+	sb.Grow(urlLen)
+
 	// check scheme is not empty
-	if sc := u.Scheme; sc != "" {
-		str += u.Scheme
-		str += "://"
+	if u.Scheme != "" {
+		sb.WriteString(u.Scheme)
+		sb.WriteString(schemaSeparator)
 	}
-	if h := u.Host; h != "" {
-		str += u.Host
+	if u.Host != "" {
+		sb.WriteString(u.Host)
 	}
-	if p := u.Path; p != "" {
-		str += "/" + u.Path
+	if u.Path != "" {
+		sb.WriteString(pathSeparator + u.Path)
 	}
-	return str
+	return sb.String()
 }
 
 func Parse(rawURL string) (*URL, error) {

@@ -7,6 +7,6 @@ import (
 )
 
 func main() {
-	url, _ := url.Parse("www.dummyurl.com")
+	url, _ := url.Parse("http://www.dummyurl.com")
 	fmt.Println(url)
 }
