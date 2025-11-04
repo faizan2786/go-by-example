@@ -36,11 +36,18 @@ func TestParseArgs(t *testing.T) {
 			wantErr: nil,
 		},
 		{
-			name:    "invalid_argument",
+			name:    "undefined_argument",
 			config:  &argConfig{},
 			args:    []string{"-url=https://www.myserver.com", "-n=5000", "-concurrent=2", "-rps=1000"},
 			want:    nil,
-			wantErr: errors.New("'-concurrent' is not a valid argument"),
+			wantErr: errors.New("flag provided but not defined: -concurrent"),
+		},
+		{
+			name:    "invalid_argument",
+			config:  &argConfig{},
+			args:    []string{"-url=https://www.myserver.com", "-n=5000", "-c=two", "-rps=1000"},
+			want:    nil,
+			wantErr: errors.New("invalid value \"two\" for flag -c: parse error"),
 		},
 	}
 
