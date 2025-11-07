@@ -45,21 +45,38 @@ func parseArgs(args []string, config *argConfig) error {
 
 	flagSet := flag.NewFlagSet("hit", flag.ContinueOnError)
 
-	// register all the flags (by its type) with its name, usage message and default value
+	// any args that comes AFTER the flags are "positional arguments" and can be
+	// retrieved by arg[i] method after parsing the args by FlagSet
 
-	// register "-url" string type flag using the StringVar Value parser provided by the FlagSet type
-	flagSet.StringVar(
-		&config.url,
-		"url",
-		"",
-		"http server `URL` to send requests to (required)") // text between backticks (`URL`) will be shown as a type of this flag (i.e. -url URL) in the usage message
+	// since the positional args are retrieved directly from the command line args (without a parser),
+	// we need to set the usage message manually to include the positional args in the message
+	flagSet.Usage = func() {
 
-	// register rest of the int type flags using our custom PositiveInt Value type (parser)
+		// print the usage message
+		fmt.Fprintf(
+			flagSet.Output(),
+			"usage: %s [options] url\noptions:\n",
+			flagSet.Name(), // name of the flagset (defined earlier)
+		)
+
+		// print the default values for the flags
+		flagSet.PrintDefaults()
+	}
+
+	// register all of the int type flags using our custom PositiveInt Value type (parser)
 	flagSet.Var(asPositiveInt(&config.c), "c", "concurrency level")
 	flagSet.Var(asPositiveInt(&config.n), "n", "number of requests to send")
 	flagSet.Var(asPositiveInt(&config.rps), "rps", "requests per second")
 
-	return flagSet.Parse(args)
+	if err := flagSet.Parse(args); err != nil {
+		return err
+	}
+
+	// retrieve the 1st positional argument (i.e. url)
+	// (Since the positional arguments don't have named flags (i.e. -flagname), their values are accessed directly by its position)
+	config.url = flagSet.Arg(0) // returns empty string if there are no positional args provided
+
+	return nil
 }
 
 // define a positive int type that implements flag's Value interface
