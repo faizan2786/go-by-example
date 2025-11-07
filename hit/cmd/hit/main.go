@@ -4,6 +4,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"net/url"
 	"os"
 	"strconv"
 )
@@ -75,6 +76,33 @@ func parseArgs(args []string, config *argConfig) error {
 	// retrieve the 1st positional argument (i.e. url)
 	// (Since the positional arguments don't have named flags (i.e. -flagname), their values are accessed directly by its position)
 	config.url = flagSet.Arg(0) // returns empty string if there are no positional args provided
+
+	// validate the provided argument values
+	if err := validateArgs(config); err != nil {
+		// print the error message followed by the usage message
+		fmt.Fprintln(flagSet.Output(), err)
+		flagSet.Usage()
+		return err
+	}
+
+	return nil
+}
+
+func validateArgs(config *argConfig) error {
+
+	// parse the provided url (using net's url package)
+	u, err := url.Parse(config.url)
+	if err != nil {
+		return fmt.Errorf("invalid value %q for url: %w", config.url, err)
+	}
+
+	if config.url == "" || u.Scheme == "" || u.Host == "" {
+		return fmt.Errorf("invalid value %q for url: requires a valid url with a scheme and host", config.url)
+	}
+
+	if config.c > config.n {
+		return fmt.Errorf("value for flag -c(=%d) can not be greater than the value for flag -n(=%d)", config.c, config.n)
+	}
 
 	return nil
 }

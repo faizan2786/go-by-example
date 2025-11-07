@@ -45,7 +45,7 @@ func TestParseArgs(t *testing.T) {
 			wantErrMsg: "flag provided but not defined: -url",
 		},
 		{
-			name:       "invalid_argument_non_int",
+			name:       "invalid_parse_non_int",
 			config:     &argConfig{},
 			args:       []string{"-n=5000", "-c=two", "-rps=1000", "https://www.myserver.com"},
 			want:       nil,
@@ -53,12 +53,36 @@ func TestParseArgs(t *testing.T) {
 			wantErrMsg: "invalid value \"two\" for flag -c",
 		},
 		{
-			name:       "invalid_argument_non_positive_int",
+			name:       "invalid_parse_non_positive_int",
 			config:     &argConfig{},
 			args:       []string{"-n=5000", "-c=0", "-rps=1000", "https://www.myserver.com"},
 			want:       nil,
 			wantErr:    true,
 			wantErrMsg: "invalid value \"0\" for flag -c: value should be greater than 0",
+		},
+		{
+			name:       "invalid_url",
+			config:     &argConfig{},
+			args:       []string{"-n=5000", "-c=8", "-rps=1000", "www.myserver.com"},
+			want:       nil,
+			wantErr:    true,
+			wantErrMsg: "invalid value \"www.myserver.com\" for url",
+		},
+		{
+			name:       "empty_url",
+			config:     &argConfig{},
+			args:       []string{"-n=5000", "-c=4", "-rps=1000", ""},
+			want:       nil,
+			wantErr:    true,
+			wantErrMsg: "invalid value \"\" for url",
+		},
+		{
+			name:       "invalid_flag_values",
+			config:     &argConfig{},
+			args:       []string{"-n=5", "-c=8", "-rps=1000", "https://www.myserver.com"},
+			want:       nil,
+			wantErr:    true,
+			wantErrMsg: "value for flag -c(=8) can not be greater than the value for flag -n(=5)",
 		},
 	}
 
