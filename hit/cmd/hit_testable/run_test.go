@@ -67,12 +67,12 @@ func TestRunValid(t *testing.T) {
 
 			// check for no errors
 			if err != nil {
-				t.Fatalf("got error: %v; want: <nil>\n", err)
+				t.Fatalf("got error = %v; want: <nil>\n", err)
 			}
 
 			// IMP: check that our tool didn't log any messages on stderr
 			if testEnv.stderr.Len() != 0 {
-				t.Errorf("got non-empty stderr; want len(stderr) = 0 bytes\n")
+				t.Error("got: len(stderr) = 0 bytes; want non-zero bytes")
 			}
 
 			// check the message on stdout
@@ -96,7 +96,7 @@ func TestRunInvalid(t *testing.T) {
 
 	// check for errors
 	if err == nil {
-		t.Fatal("got error: <nil>; want an error")
+		t.Fatal("got error = <nil>; want an error")
 	}
 
 	// IMP: check that our tool has logged error message on stderr
