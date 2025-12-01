@@ -1,3 +1,6 @@
+// This program uses flag package to parse flags and arguments provided to the "hit" tool
+// (It defines the tool in a way that it can be testable at the CLI level)
+
 package main
 
 import (

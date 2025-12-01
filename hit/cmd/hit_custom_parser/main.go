@@ -3,8 +3,6 @@
 
 package main
 
-/*
-
 import (
 	"fmt"
 	"os"
@@ -40,6 +38,22 @@ const usage = `Usage:
 `
 
 type parseFunc func(string) error // define a value parser function type
+
+func main() {
+
+	config := argConfig{
+		n:   1000,
+		c:   1,
+		rps: 100,
+	}
+	args := os.Args[1:] // get the command line args from the os package (ignore 1st arg - the program name)
+
+	if err := parseArgs(args, &config); err != nil {
+		os.Exit(1)
+	}
+
+	fmt.Printf("%s\nSending %d requests to %q at %d requests per second (concurrency=%d)\n", logo, config.n, config.url, config.rps, config.c)
+}
 
 func parseArgs(args []string, config *argConfig) error {
 
@@ -85,5 +99,3 @@ func intParser(v *int) parseFunc {
 		return err
 	}
 }
-
-*/
