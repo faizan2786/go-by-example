@@ -56,6 +56,10 @@ func Parse(rawURL string) (*URL, error) {
 	leftOverStr = leftOverStr[2:]                  // skip "//"
 	host, path, _ := strings.Cut(leftOverStr, "/") // url may or may not have a sub-path
 
+	if host == "" {
+		return nil, errors.New("missing host")
+	}
+
 	// construct the URL obj and return the pointer
 	return &URL{Scheme: scheme, Host: host, Path: path}, nil
 }

@@ -1,14 +1,16 @@
-package url
+package url_test
 
 import (
 	"fmt"
 	"strings"
 	"testing"
+
+	"github.com/faizan2786/gobyexample/url"
 )
 
-// benchmarking URL's String() function
+// benchmarking url.URL's String() function
 func BenchmarkURLStringShort(b *testing.B) {
-	url := &URL{"https", "myurl.com", "myblog"}
+	url := &url.URL{"https", "myurl.com", "myblog"}
 	for b.Loop() {
 		_ = url.String()
 	}
@@ -24,7 +26,7 @@ func BenchmarkURLStringLong(b *testing.B) {
 	for _, n := range lengths {
 		host := strings.Repeat(hostUnit, n)
 		path := strings.Repeat(pathUnit, n)
-		url := &URL{scheme, host, path}
+		url := &url.URL{scheme, host, path}
 
 		b.Run(fmt.Sprintf("Bench%d", n), func(b *testing.B) {
 			for b.Loop() {

@@ -39,7 +39,7 @@ var parseTestCases = []struct {
 	{
 		name:   "no_host",
 		rawURL: "https:///myblog",
-		err:    errors.New("path without host"),
+		err:    errors.New("missing host"),
 	},
 	{
 		name:   "no_path",
