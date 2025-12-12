@@ -24,18 +24,21 @@ func Send(_ *http.Client, _ *http.Request) Result {
 // SendN sends N requests using [Send].
 // It returns a [Results] iterator that
 // pushes a [Result] for each [http.Request] sent.
-func SendN(N int, req *http.Request) (Results, error) {
+func SendN(N int, req *http.Request, opts Options) (Results, error) {
+
+	// fills opts with default values for unset/invalid options
+	opts = withDefaults(opts)
 
 	if N <= 0 {
 		return nil, fmt.Errorf("n must be greater than 0: got %d", N)
 	}
 
 	// define an iterator with a yield function that
-	// produces (i.e. yields) a Result by calling Send() per request
+	// produces (i.e. yields) a Result by calling opts.Send() per request
 	// (note that the requests are performed sequentially)
 	iter := func(yield func(Result) bool) {
 		for range N {
-			result := Send(http.DefaultClient, req)
+			result := opts.Send(req)
 			if !yield(result) {
 				return
 			}
