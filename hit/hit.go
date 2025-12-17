@@ -47,7 +47,7 @@ func SendN(N int, req *http.Request, opts Options) (Results, error) {
 
 	// Note: we use iterator instead of a slice as
 	// using a slice will need us to complete sending each request before we can return their results
-	// where as iterator produces each result lazily, allowing EARLY STOPPING if yield returns false
+	// whereas iterator produces each result lazily, allowing EARLY STOPPING if yield returns false
 	// (i.e. if something goes wrong or consumer wants to stop receiving further values)
 	// hence, saving further compute and memory allocations
 
