@@ -91,7 +91,7 @@ func runHit(config argConfig, stdout io.Writer) error {
 	}
 
 	opts := hit.Options{Concurrency: config.c, RPS: config.rps}
-	results, err := hit.SendN(config.n, req, opts)
+	results, err := hit.SendN(config.n, opts, req)
 	if err != nil {
 		return fmt.Errorf("error while sending requests: %w", err)
 	}
