@@ -9,7 +9,9 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"slices"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/faizan2786/gobyexample/hit"
@@ -96,6 +98,13 @@ func runHit(config argConfig, stdout io.Writer) error {
 		return fmt.Errorf("error while sending requests: %w", err)
 	}
 
+	printResults(config.n, results, stdout)
+
+	// sendN again to calculate and print summary correctly
+	results, err = hit.SendN(config.n, opts, req)
+	if err != nil {
+		return fmt.Errorf("error while sending requests: %w", err)
+	}
 	summary := hit.Summarize(results)
 	printSummary(summary, stdout)
 
@@ -125,6 +134,42 @@ Summary:
 		sum.Slowest.Round(time.Millisecond),
 		sum.Average.Round(time.Millisecond),
 	)
+}
+
+// prints results as they come with a progress bar
+// it buffers the results and return an iterator for further consumption
+func printResults(n int, results hit.Results, stdout io.Writer) hit.Results {
+
+	res := make([]hit.Result, 0, n)
+	curr := 0
+	for r := range results {
+		res = append(res, r)
+		curr += 1
+		printProgress(curr, n, stdout)
+	}
+
+	return hit.Results(slices.Values(res))
+}
+
+func printProgress(c int, n int, stdout io.Writer) {
+
+	if c <= 0 || n <= 0 {
+		return
+	}
+
+	const width int = 40
+	filled := c * width / n
+
+	// build string once and then print
+	bar := "[" +
+		strings.Repeat("=", filled) +
+		strings.Repeat(" ", width-filled) +
+		"] " +
+		fmt.Sprintf("%d/%d", c, n) +
+		fmt.Sprintf(" (%d%%)", c*100/n) // print progress in percentage
+
+	// \r moves cursor to start of the line
+	fmt.Fprintf(stdout, "\r%s", bar)
 }
 
 // function to parse command line args and assigned them to a config variable (using the flag package)
