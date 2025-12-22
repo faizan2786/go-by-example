@@ -1,6 +1,10 @@
 package hit
 
-import "testing"
+import (
+	"net/http"
+	"testing"
+	"time"
+)
 
 func TestDefaults(t *testing.T) {
 
@@ -44,5 +48,35 @@ func TestDefaultsForInvalidInputs(t *testing.T) {
 
 	if op.RPS != 0 {
 		t.Errorf("RPS = %d; want %d\f", op.RPS, 0)
+	}
+}
+
+func TestDefaultsWithCustomSend(t *testing.T) {
+
+	send := func(_ *http.Request) Result {
+		return Result{
+			Status:   http.StatusOK,
+			Bytes:    50,
+			Duration: 10 * time.Millisecond,
+		}
+	}
+
+	op := Options{Send: send}
+	op = withDefaults(op)
+
+	if op.Concurrency != 1 {
+		t.Errorf("Concurrency = %d; want %d\f", op.Concurrency, 1)
+	}
+
+	if op.RPS != 0 {
+		t.Errorf("RPS = %d; want %d\f", op.RPS, 0)
+	}
+
+	// test that the send function is unchanged
+	got := op.Send(nil)
+	want := send(nil)
+
+	if got != want {
+		t.Fatalf("op.Send() = %+v; want = %+v\n", got, want)
 	}
 }
