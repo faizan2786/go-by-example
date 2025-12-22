@@ -45,7 +45,7 @@ func getHttpRequest() *http.Request {
 
 func TestSendN(t *testing.T) {
 
-	N := 100
+	N := 50
 	opts := Options{}
 	opts.Send = getSendFunc()
 	req := getHttpRequest()

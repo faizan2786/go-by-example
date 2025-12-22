@@ -13,11 +13,11 @@ func TestSummarize(t *testing.T) {
 	results := []Result{
 		{
 			Bytes:    100,
-			Duration: 200 * time.Millisecond,
+			Duration: 100 * time.Millisecond,
 		},
 		{
 			Bytes:    500,
-			Duration: 150 * time.Millisecond,
+			Duration: 300 * time.Millisecond,
 		},
 		{
 			Duration: 500 * time.Millisecond,
@@ -30,8 +30,9 @@ func TestSummarize(t *testing.T) {
 
 	want := Summary{
 		Bytes:    600,
-		Fastest:  150 * time.Millisecond,
+		Fastest:  100 * time.Millisecond,
 		Slowest:  500 * time.Millisecond,
+		Average:  300 * time.Millisecond,
 		Requests: 3,
 		Errors:   1,
 		Success:  66.667,
@@ -47,6 +48,10 @@ func TestSummarize(t *testing.T) {
 
 	if s.Slowest != want.Slowest {
 		t.Errorf("Slowest: got = %v, want = %v\n", s.Slowest, want.Slowest)
+	}
+
+	if s.Average != want.Average {
+		t.Errorf("Average: got = %v, want = %v\n", s.Average, want.Average)
 	}
 
 	if s.Errors != want.Errors {

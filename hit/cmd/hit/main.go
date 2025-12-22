@@ -113,6 +113,7 @@ Summary:
     Duration: %s
     Fastest:  %s
     Slowest:  %s
+    Average:  %s
 `,
 		sum.Success,
 		math.Round(sum.RPS),
@@ -122,6 +123,7 @@ Summary:
 		sum.Duration.Round(time.Millisecond),
 		sum.Fastest.Round(time.Millisecond),
 		sum.Slowest.Round(time.Millisecond),
+		sum.Average.Round(time.Millisecond),
 	)
 }
 
