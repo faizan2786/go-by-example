@@ -1,4 +1,4 @@
-// This file defines a concurrent pipeline to send N requests to server concurrently
+// This file defines a concurrent pipeline to send N requests to a server concurrently
 // consists of 3 stages: a Producer, Throttler and a Dispatcher
 // each stage returns a receive-only channel to deliver its output
 
@@ -72,6 +72,7 @@ func dispatch(opts Options, in <-chan *http.Request) <-chan Result {
 		}()
 	}
 	// spawn a go routine to close the output channel when all workers are done
+	// (i.e. when the input channel closes)
 	go func() {
 		wg.Wait()
 		close(out)

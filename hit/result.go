@@ -24,11 +24,11 @@ type Summary struct {
 	Requests int           // Requests is the total number of requests made
 	Errors   int           // Errors is the total number of failed requests
 	Bytes    int64         // Bytes is the total number of bytes received
-	RPS      float64       // RPS is the number of requests served per second 	(i.e. Throughput)
-	Duration time.Duration // Duration is the total time taken by requests
-	Average  time.Duration // Average request duration 							(i.e. Latency)
 	Fastest  time.Duration // Fastest is the fastest request duration
 	Slowest  time.Duration // Slowest is the slowest request duration
+	Average  time.Duration // Average request duration - average response time for an individual request (i.e. Latency)
+	Duration time.Duration // Duration is the total (clock) time taken by all the requests
+	RPS      float64       // RPS is the number of requests served per second (i.e. Throughput)
 	Success  float64       // Success is the ratio of successful requests
 }
 
@@ -41,7 +41,7 @@ func Summarize(results Results) Summary {
 		return s // return a zero-value summary
 	}
 
-	var totalTime time.Duration
+	var requestDurationSum time.Duration // sum of all request durations
 
 	start := time.Now()
 	for r := range results {
@@ -60,15 +60,15 @@ func Summarize(results Results) Summary {
 			s.Slowest = r.Duration
 		}
 
-		totalTime += r.Duration
+		requestDurationSum += r.Duration
 	}
 
-	s.Duration = time.Since(start)
-	s.RPS = float64(s.Requests) / s.Duration.Seconds()
+	s.Duration = time.Since(start)                     // total clock time
+	s.RPS = float64(s.Requests) / s.Duration.Seconds() // throughput
 
 	if s.Requests > 0 {
+		s.Average = requestDurationSum / time.Duration(s.Requests) // latency
 		s.Success = (float64(s.Requests-s.Errors) / float64(s.Requests)) * 100
-		s.Average = totalTime / time.Duration(s.Requests)
 	}
 
 	return s
