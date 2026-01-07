@@ -1,6 +1,7 @@
 package hit
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"time"
@@ -24,7 +25,7 @@ func Send(_ *http.Client, _ *http.Request) Result {
 // SendN sends N requests using [Send].
 // It returns a [Results] iterator that
 // pushes a [Result] for each [http.Request] sent.
-func SendN(N int, opts Options, req *http.Request) (Results, error) {
+func SendN(ctx context.Context, N int, opts Options, req *http.Request) (Results, error) {
 
 	// fills opts with default values for unset/invalid options
 	opts = withDefaults(opts)
@@ -33,11 +34,17 @@ func SendN(N int, opts Options, req *http.Request) (Results, error) {
 		return nil, fmt.Errorf("n must be greater than 0: got %d", N)
 	}
 
-	results := runPipeline(N, opts, req)
+	// create a new child context from the received context
+	// this new context will enable us trigger the cancellation in the pipeline even when the parent context is alive
+	// e.g. when the iterator stops early (when the consumer wants to consume only part of the results)
+	ctx, cancel := context.WithCancel(ctx)
+
+	results := runPipeline(ctx, N, opts, req)
 
 	// define an iterator with a yield function that
 	// reads a result from results channel and produces (i.e. yields) to the consumer
 	iter := func(yield func(Result) bool) {
+		defer cancel() // cancel the derived context right before returning - in turn, cause the pipeline to stop
 		for result := range results {
 			if !yield(result) {
 				return

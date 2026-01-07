@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"flag"
 	"fmt"
@@ -9,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/signal"
 	"slices"
 	"strconv"
 	"strings"
@@ -42,6 +44,7 @@ type env struct {
 }
 
 func main() {
+
 	args := os.Args // get the command line args from the os package (ignore 1st arg - the program name)
 
 	env := &env{
@@ -52,6 +55,7 @@ func main() {
 	}
 
 	if err := run(env); err != nil {
+		fmt.Printf("Error while running the hit tool: %v\n", err)
 		os.Exit(1)
 	}
 }
@@ -77,9 +81,9 @@ func run(e *env) error {
 	}
 
 	// run the actual hit client
-	runHit(config, e.stdout)
+	err := runHit(config, e.stdout)
 
-	return nil
+	return err
 }
 
 // run the HIT client with given args and print the requests summary
@@ -94,22 +98,32 @@ func runHit(config argConfig, stdout io.Writer) error {
 
 	opts := hit.Options{Concurrency: config.c, RPS: config.rps}
 
-	// call sendN and print the result
-	results, err := hit.SendN(config.n, opts, req)
-	if err != nil {
-		return fmt.Errorf("error while sending requests: %w", err)
-	}
-	printResults(config.n, results, stdout)
+	// derive a signal notification context to catch os interrupt signals (e.g., SIGINT - generally caused by ctrl+c press)
+	// this will cause the go runtime to catch interrupt signal and cancel the context (i.e. notify)
+	// However, the go runtime will continue listening for the signal until the stop() function is called.
+	// Hence, stop() must be called as soon as we finish the termination on first signal.
+
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
+
+	/*
+		// call sendN and print the result
+		results, err := hit.SendN(ctx, config.n, opts, req)
+		if err != nil {
+			return fmt.Errorf("error while sending requests: %w", err)
+		}
+		printResults(config.n, results, stdout)
+	*/
 
 	// call sendN and calculate the summary
-	results, err = hit.SendN(config.n, opts, req)
+	results, err := hit.SendN(ctx, config.n, opts, req)
 	if err != nil {
 		return fmt.Errorf("error while sending requests: %w", err)
 	}
 	summary := hit.Summarize(results)
 	printSummary(summary, stdout)
 
-	return nil
+	return ctx.Err() // returns an error if context was cancelled (for some reason) otherwise, returns nil
 }
 
 func printSummary(sum hit.Summary, stdout io.Writer) {
