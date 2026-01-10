@@ -3,23 +3,37 @@ package hit
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 )
 
 // Send sends an HTTP request and returns its performance metric as [Result].
-func Send(_ *http.Client, _ *http.Request) Result {
-	const roundTripTime = 100 * time.Millisecond
+func Send(client *http.Client, req *http.Request) Result {
+	var (
+		bytes  int64
+		status int
+	)
 
-	// for now, simulate sending a request and return a successful result
-	time.Sleep(roundTripTime)
+	// send the request to the server
+	start := time.Now()
+	res, err := client.Do(req)
 
-	return Result{
-		Status:   http.StatusOK,
-		Bytes:    100,
-		Duration: roundTripTime,
+	// read the response
+	if err == nil {
+		defer res.Body.Close()
+		status = res.StatusCode
+		// we just need to know number of bytes in the response
+		// so stream the response efficiently (vi io.copy) and discard its content
+		bytes, err = io.Copy(io.Discard, res.Body)
 	}
 
+	return Result{
+		Status:   status,
+		Bytes:    bytes,
+		Duration: time.Since(start),
+		Error:    err,
+	}
 }
 
 // SendN sends N requests using [Send].
