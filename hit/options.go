@@ -1,6 +1,9 @@
 package hit
 
-import "net/http"
+import (
+	"net/http"
+	"time"
+)
 
 type SendFunc func(*http.Request) Result
 
@@ -40,7 +43,22 @@ func withDefaults(op Options) Options {
 
 		// a closure that wraps the hit.Send function with a default http client
 		op.Send = func(req *http.Request) Result {
-			return Send(http.DefaultClient, req)
+
+			// configure the http client to maintain a TCP connection pool
+			// (so that each dispatcher goroutine can establish a TCP connection only once
+			// and reuse it for subsequent requests)
+			// Also, disable http redirects using the check redirect option
+			client := &http.Client{
+				Transport: &http.Transport{
+					MaxIdleConnsPerHost: op.Concurrency,
+				},
+				CheckRedirect: func(_ *http.Request, _ []*http.Request) error {
+					return http.ErrUseLastResponse
+				},
+				Timeout: 10 * time.Second, // timeout per request
+			}
+
+			return Send(client, req)
 		}
 	}
 
